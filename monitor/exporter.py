@@ -1,7 +1,8 @@
 from prometheus_client import Counter, Gauge, Histogram, start_http_server
 
 from monitor.database.events import (BlockchainStateEvent, ChiaEvent, ConnectionsEvent, FarmingInfoEvent,
-                                     HarvesterPlotsEvent, PoolStateEvent, PriceEvent, SignagePointEvent, WalletBalanceEvent)
+                                     HarvesterPlotsEvent, PoolStateEvent, PriceEvent, SignagePointEvent, WalletBalanceEvent,
+                                     FarmerTargetWalletBalanceEvent)
 from monitor.database.queries import get_signage_point_ts
 
 
@@ -33,6 +34,8 @@ class ChiaExporter:
                             buckets=(.01, .05, .1, .25, .5, .75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.25, 3.5,
                                      3.75, 4.0, 4.25, 4.5, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0,
                                      11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, float("inf")))
+
+    farmer_target_wallet_balance_gauge = Gauge('chia_farmer_target_wallet_balance_mojos', 'Balance of farmer target wallet')
 
     # Pool metrics
     current_pool_points_gauge = Gauge('chia_current_pool_points',
@@ -78,6 +81,8 @@ class ChiaExporter:
             self.update_pool_state_metrics(event)
         elif isinstance(event, PriceEvent):
             self.update_price_metrics(event)
+        elif isinstance(event, FarmerTargetWalletBalanceEvent):
+            self.update_farmer_target_wallet_balance_metrics(event)
 
     def update_harvester_metrics(self, event: HarvesterPlotsEvent) -> None:
         self.plot_count_gauge.labels(event.host, "OG").set(event.plot_count)
@@ -134,3 +139,6 @@ class ChiaExporter:
         self.price_eur_cents_gauge.set(event.eur_cents)
         self.price_btc_satoshi_gauge.set(event.btc_satoshi)
         self.price_eth_gwei_gauge.set(event.eth_gwei)
+
+    def update_farmer_target_wallet_balance_metrics(self, event: FarmerTargetWalletBalanceEvent) -> None:
+        self.farmer_target_wallet_balance_gauge.set(event.balance)

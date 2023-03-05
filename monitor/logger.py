@@ -1,7 +1,8 @@
 import logging
 
 from monitor.database.events import (BlockchainStateEvent, ChiaEvent, ConnectionsEvent, FarmingInfoEvent,
-                                     HarvesterPlotsEvent, PoolStateEvent, PriceEvent, SignagePointEvent, WalletBalanceEvent)
+                                     HarvesterPlotsEvent, PoolStateEvent, PriceEvent, SignagePointEvent,
+                                     WalletBalanceEvent, FarmerTargetWalletBalanceEvent)
 from monitor.database.queries import get_signage_point_ts
 from monitor.format import *
 
@@ -29,6 +30,8 @@ class ChiaLogger:
             self.update_pool_state_metrics(event)
         elif isinstance(event, PriceEvent):
             self.update_price_metrics(event)
+        elif isinstance(event, FarmerTargetWalletBalanceEvent):
+            self.update_farmer_target_wallet_balance_metrics(event)
 
     def update_harvester_metrics(self, event: HarvesterPlotsEvent) -> None:
         self.log.info("-" * 64)
@@ -97,3 +100,8 @@ class ChiaLogger:
         self.log.info(format_price(event.eur_cents / 100, "EUR", fix_indent=True))
         self.log.info(format_price(event.btc_satoshi / 10e7, "BTC", fix_indent=True))
         self.log.info(format_price(event.eth_gwei / 10e8, "ETH", fix_indent=True))
+
+    def update_farmer_target_wallet_balance_metrics(self, event: FarmerTargetWalletBalanceEvent) -> None:
+        self.log.info("-" * 64)
+        self.log.info(format_balance(int(event.balance)))
+

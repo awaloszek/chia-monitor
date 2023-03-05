@@ -85,3 +85,10 @@ class PriceEvent(ChiaEvent):
     eur_cents = Column(Integer)
     btc_satoshi = Column(Integer)
     eth_gwei = Column(Integer)
+
+
+class FarmerTargetWalletBalanceEvent(ChiaEvent):
+    __tablename__ = "farmer_target_wallet_balance_events"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ts = Column(DateTime, index=True, nullable=False)
+    balance = Column(String(32))

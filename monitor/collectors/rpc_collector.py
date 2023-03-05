@@ -16,9 +16,11 @@ from chia.rpc.rpc_client import RpcClient
 from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.server.outbound_message import NodeType
 from chia.util.ints import uint16
+from chia.util.bech32m import decode_puzzle_hash
 from monitor.collectors.collector import Collector
 from monitor.database.events import (BlockchainStateEvent, ChiaEvent, ConnectionsEvent,
-                                     HarvesterPlotsEvent, PoolStateEvent, WalletBalanceEvent)
+                                     HarvesterPlotsEvent, PoolStateEvent, WalletBalanceEvent,
+                                     FarmerTargetWalletBalanceEvent)
 
 
 class RpcCollector(Collector):
@@ -54,6 +56,7 @@ class RpcCollector(Collector):
             await self.full_node_client.get_connections()
             self.tasks.append(self.get_blockchain_state)
             self.tasks.append(self.get_connections)
+            self.tasks.append(self.get_farmer_target_address_wallet_balance)
         except Exception as e:
             if self.full_node_client is not None:
                 await RpcCollector.close_rpc_client(self.full_node_client)
@@ -111,6 +114,21 @@ class RpcCollector(Collector):
         event = WalletBalanceEvent(ts=datetime.now(),
                                    confirmed=str(sum(confirmed_balances)),
                                    farmed=str(farmed_amount['farmed_amount']))
+        await self.publish_event(event)
+
+    async def get_farmer_target_address_wallet_balance(self) -> None:
+        try:
+            target_address = self.net_config['farmer']['xch_target_address']
+            puzzle_hash = decode_puzzle_hash(target_address)
+            coin_records = await self.full_node_client.get_coin_records_by_puzzle_hash(puzzle_hash, False)
+            balance = 0
+            for coin_record in coin_records:
+                balance += coin_record.coin.amount
+
+        except Exception as e:
+            raise ConnectionError(f"Failed to get farmer target wallet balance. Is your node up? {type(e).__name__}: {e}")
+        event = FarmerTargetWalletBalanceEvent(ts=datetime.now(),
+                                               balance=str(balance))
         await self.publish_event(event)
 
     async def get_harvester_plots(self) -> None:
