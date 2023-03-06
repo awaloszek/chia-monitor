@@ -120,15 +120,18 @@ class RpcCollector(Collector):
         try:
             target_address = self.net_config['farmer']['xch_target_address']
             puzzle_hash = decode_puzzle_hash(target_address)
-            coin_records = await self.full_node_client.get_coin_records_by_puzzle_hash(puzzle_hash, False)
+            coin_records = await self.full_node_client.get_coin_records_by_puzzle_hash(puzzle_hash, True)
             balance = 0
+            farmed = 0
             for coin_record in coin_records:
                 balance += coin_record.coin.amount
+                farmed += coin_record.coin.amount if coin_record.coin.amount > 0 else 0
 
         except Exception as e:
             raise ConnectionError(f"Failed to get farmer target wallet balance. Is your node up? {type(e).__name__}: {e}")
         event = FarmerTargetWalletBalanceEvent(ts=datetime.now(),
-                                               balance=str(balance))
+                                               balance=str(balance),
+                                               farmed=str(farmed))
         await self.publish_event(event)
 
     async def get_harvester_plots(self) -> None:

@@ -104,4 +104,5 @@ class ChiaLogger:
     def update_farmer_target_wallet_balance_metrics(self, event: FarmerTargetWalletBalanceEvent) -> None:
         self.log.info("-" * 64)
         self.log.info(format_balance(int(event.balance)))
+        self.log.info(format_farmed(int(event.farmed)))
 

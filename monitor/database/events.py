@@ -92,3 +92,4 @@ class FarmerTargetWalletBalanceEvent(ChiaEvent):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ts = Column(DateTime, index=True, nullable=False)
     balance = Column(String(32))
+    farmed = Column(String(32))

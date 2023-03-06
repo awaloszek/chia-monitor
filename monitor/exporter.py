@@ -36,6 +36,7 @@ class ChiaExporter:
                                      11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, float("inf")))
 
     farmer_target_wallet_balance_gauge = Gauge('chia_farmer_target_wallet_balance_mojos', 'Balance of farmer target wallet')
+    farmer_target_wallet_farmed_gauge = Gauge('chia_farmer_target_wallet_farmed_mojos', 'Farmed to farmer target wallet')
 
     # Pool metrics
     current_pool_points_gauge = Gauge('chia_current_pool_points',
@@ -142,3 +143,4 @@ class ChiaExporter:
 
     def update_farmer_target_wallet_balance_metrics(self, event: FarmerTargetWalletBalanceEvent) -> None:
         self.farmer_target_wallet_balance_gauge.set(event.balance)
+        self.farmer_target_wallet_farmed_gauge.set(event.farmed)
